@@ -1,5 +1,6 @@
 package com.example;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,6 +14,8 @@ import java.time.LocalTime;
 
 public class ChatController {
 
+    private NtfyConnectionImpl ntfy;
+
     @FXML
     private VBox chatBox;
 
@@ -22,6 +25,10 @@ public class ChatController {
     @FXML
     public void initialize() {
         inputField.setOnAction((event) -> onSendClicked());
+
+        ntfy = new NtfyConnectionImpl();
+
+        ntfy.receive(message -> Platform.runLater(() -> addMessageBubble(message, false)));
     }
 
     @FXML
@@ -31,6 +38,7 @@ public class ChatController {
             addMessageBubble(message, true);
             inputField.clear();
         }
+        ntfy.send(message);
 
     }
 
