@@ -26,7 +26,7 @@ public class NtfyConnectionImpl{
         this.hostName = hostName;
     }
 
-    public boolean send(String message) {
+    public void send(String message) {
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(hostName + "/mytopic"))
                 .header("Content-Type", "text/plain")
@@ -34,10 +34,8 @@ public class NtfyConnectionImpl{
                 .build();
         try {
             http.send(httpRequest, HttpResponse.BodyHandlers.discarding());
-            return true;
         } catch (IOException | InterruptedException e) {
             System.out.println("Error sending message");
-            return false;
         }
     }
 
@@ -54,7 +52,7 @@ public class NtfyConnectionImpl{
                         if (json.has("message")) {
                             messageHandler.accept(json.get("message").asText());
                         }
-                    } catch (Exception e) {}
+                    } catch (Exception _) {}
                 }));
     }
 

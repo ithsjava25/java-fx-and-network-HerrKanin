@@ -20,10 +20,10 @@ public class ChatController {
     private VBox chatBox;
 
     @FXML
-    private TextField inputField;
+    public TextField inputField;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         inputField.setOnAction((event) -> onSendClicked());
 
         ntfy = new NtfyConnectionImpl();
@@ -32,7 +32,7 @@ public class ChatController {
     }
 
     @FXML
-    private void onSendClicked() {
+    public void onSendClicked() {
         String message = inputField.getText().trim();
         if (!message.isEmpty()) {
             addMessageBubble(message, true);
@@ -71,5 +71,13 @@ public class ChatController {
         container.setPadding(new Insets(5));
 
         chatBox.getChildren().add(container);
+    }
+
+    //Används vid programmets tester
+    public void setNtfyConnection(NtfyConnectionImpl ntfy) {
+        this.ntfy = ntfy;
+    }
+    public void setInputField(TextField inputField) {
+        this.inputField = inputField;
     }
 }
