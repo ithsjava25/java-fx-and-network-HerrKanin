@@ -34,12 +34,13 @@ public class ChatController {
     @FXML
     public void onSendClicked() {
         String message = inputField.getText().trim();
-        if (!message.isEmpty()) {
-            addMessageBubble(message, true);
-            inputField.clear();
+        if (message.isEmpty()) {
+            return;
+
         }
         ntfy.send(message);
-
+        addMessageBubble("Du: " + message, true);
+        inputField.clear();
     }
 
     private void addMessageBubble (String text, boolean isUser) {
@@ -79,5 +80,8 @@ public class ChatController {
     }
     public void setInputField(TextField inputField) {
         this.inputField = inputField;
+    }
+    public void setChatBox(VBox chatBox) {
+        this.chatBox = chatBox;
     }
 }
