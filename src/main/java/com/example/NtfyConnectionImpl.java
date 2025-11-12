@@ -11,28 +11,34 @@ import java.net.http.HttpResponse;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class NtfyConnectionImpl{
+public class NtfyConnectionImpl {
 
     private final HttpClient http = HttpClient.newHttpClient();
     private final String hostName;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final String senderId;
+
 
     public NtfyConnectionImpl() {
         Dotenv dotenv = Dotenv.load();
         hostName = Objects.requireNonNull(dotenv.get("HOST_NAME"));
+        senderId = dotenv.get("USER_NAME", System.getProperty("user.name"));
     }
 
     public NtfyConnectionImpl(String hostName) {
         this.hostName = hostName;
+        this.senderId = System.getProperty("user.name");
     }
 
     public void send(String message) {
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(hostName + "/mytopic"))
-                .header("Content-Type", "text/plain")
-                .POST(HttpRequest.BodyPublishers.ofString(message))
-                .build();
         try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(hostName + "/mytopic"))
+                    .header("Content-Type", "text/plain")
+                    .header("Title", senderId)
+                    .POST(HttpRequest.BodyPublishers.ofString(message))
+                    .build();
+
             http.send(httpRequest, HttpResponse.BodyHandlers.discarding());
         } catch (IOException | InterruptedException e) {
             System.out.println("Error sending message");
@@ -40,6 +46,7 @@ public class NtfyConnectionImpl{
     }
 
     public void receive(Consumer<String> messageHandler) {
+
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(hostName + "/mytopic/json"))
                 .GET()
@@ -50,9 +57,15 @@ public class NtfyConnectionImpl{
                     try {
                         var json = mapper.readTree(line);
                         if (json.has("message")) {
-                            messageHandler.accept(json.get("message").asText());
+                            String msg = json.get("message").asText();
+                            String receiveSender = json.has("title") ? json.get("title").asText() : "";
+
+                            if (!receiveSender.equals(senderId)) {
+                                messageHandler.accept(msg);
+                            }
                         }
-                    } catch (Exception _) {}
+                    } catch (Exception _) {
+                    }
                 }));
     }
 
