@@ -3,6 +3,7 @@ package com.example;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -56,6 +57,16 @@ public class NtfyConnectionImpl {
                 .thenAccept(response -> response.body().forEach(line -> {
                     try {
                         var json = mapper.readTree(line);
+
+                        if (json.has("attachment")) {
+                            String filename = json.get("attachment").asText();
+                            String receiveSender = json.has("title") ? json.get("title").asText() : "";
+
+                            if (!receiveSender.equals(senderId)) {
+                                messageHandler.accept("File mottagen: " + filename);
+                            }
+                            return;
+                        }
                         if (json.has("message")) {
                             String msg = json.get("message").asText();
                             String receiveSender = json.has("title") ? json.get("title").asText() : "";
@@ -64,9 +75,25 @@ public class NtfyConnectionImpl {
                                 messageHandler.accept(msg);
                             }
                         }
+
                     } catch (Exception _) {
                     }
                 }));
+    }
+
+    public void sendFile(File file) {
+        try {
+            byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(hostName + "/mytopic"))
+                    .header("Title", senderId)
+                    .header("Attachment", file.getName())
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(fileBytes))
+                    .build();
+            http.send(httpRequest, HttpResponse.BodyHandlers.discarding());
+        } catch (Exception e) {
+            System.out.println("Error sending file");
+        }
     }
 
 

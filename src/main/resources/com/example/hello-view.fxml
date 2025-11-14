@@ -13,6 +13,7 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
                 <TextField fx:id="inputField" HBox.hgrow="ALWAYS"/>
+                <Button text="Bifoga fil" onAction="#onAttachedClicked"/>
                 <Button mnemonicParsing="false" onAction="#onSendClicked" text="Send"/>
             </HBox>
         </bottom>

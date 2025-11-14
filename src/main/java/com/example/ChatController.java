@@ -9,7 +9,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.time.LocalTime;
 
 public class ChatController {
@@ -41,6 +43,18 @@ public class ChatController {
         ntfy.send(message);
         addMessageBubble("Du: " + message, true);
         inputField.clear();
+    }
+
+    @FXML
+    public void onAttachedClicked(){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Välj en fi att skicka");
+        File file = fileChooser.showOpenDialog(null);
+
+        if (file != null) {
+            ntfy.sendFile(file);
+            addMessageBubble("Du bifogade filen: " + file.getName(), true);
+        }
     }
 
     private void addMessageBubble (String text, boolean isUser) {
