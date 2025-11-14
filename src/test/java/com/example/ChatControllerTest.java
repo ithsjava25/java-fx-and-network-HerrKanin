@@ -21,8 +21,6 @@ class ChatControllerTest {
     static void initJFX() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         Platform.startup(latch::countDown);
-        latch.await();
-
     }
 
     @BeforeEach
