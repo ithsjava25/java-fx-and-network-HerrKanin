@@ -16,6 +16,7 @@ import java.time.LocalTime;
 
 public class ChatController {
 
+    private final ChatModel model = new ChatModel();
     private NtfyConnectionImpl ntfy;
 
     @FXML
@@ -30,17 +31,20 @@ public class ChatController {
 
         ntfy = new NtfyConnectionImpl();
 
-        ntfy.receive(message -> Platform.runLater(() -> addMessageBubble(message, false)));
+        ntfy.receive(message -> Platform.runLater(() -> {
+                model.addMessage(message);
+                addMessageBubble(message, false);
+        }));
     }
 
     @FXML
     public void onSendClicked() {
         String message = inputField.getText().trim();
-        if (message.isEmpty()) {
+        if (!model.shouldSendMessage(message)) {
             return;
-
         }
         ntfy.send(message);
+        model.addMessage(message);
         addMessageBubble("Du: " + message, true);
         inputField.clear();
     }

@@ -20,5 +20,8 @@ public class ChatModel {
     public int getMessageCount() {
         return messages.size();
     }
+    public boolean shouldSendMessage(String message){
+        return message != null && !message.isBlank();
+    }
 
 }
