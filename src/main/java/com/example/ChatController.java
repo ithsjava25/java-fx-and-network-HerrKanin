@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -16,7 +15,10 @@ import java.time.LocalTime;
 
 public class ChatController {
 
+    //Model som lagrar och validerar meddelanden
     private final ChatModel model = new ChatModel();
+
+    //Hanterar kommunikationen mot ntfy-servern
     private NtfyConnectionImpl ntfy;
 
     @FXML
@@ -27,10 +29,12 @@ public class ChatController {
 
     @FXML
     private void initialize() {
+        //När användaren trycker på Enter så skciaks medelandet
         inputField.setOnAction((event) -> onSendClicked());
 
         ntfy = new NtfyConnectionImpl();
 
+        //Lyssnar på inkommande meddelanden från servern
         ntfy.receive(message -> Platform.runLater(() -> {
                 model.addMessage(message);
                 addMessageBubble(message, false);
@@ -39,22 +43,25 @@ public class ChatController {
 
     @FXML
     public void onSendClicked() {
+        //Hämtar text och tar bort whitespace i början & slutet
         String message = inputField.getText().trim();
         if (!model.shouldSendMessage(message)) {
             return;
         }
-        ntfy.send(message);
+        ntfy.send(message); //Skick text till ntfy-server
         model.addMessage(message);
         addMessageBubble("Du: " + message, true);
-        inputField.clear();
+        inputField.clear(); //Töm textfältet
     }
 
     @FXML
     public void onAttachedClicked(){
+        //Öppnar OS filväljare
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Välj en fi att skicka");
         File file = fileChooser.showOpenDialog(null);
 
+        //Skicka vald fli
         if (file != null) {
             ntfy.sendFile(file);
             addMessageBubble("Du bifogade filen: " + file.getName(), true);
@@ -68,6 +75,7 @@ public class ChatController {
         bubble.setPadding(new Insets(8));
         bubble.setMaxWidth(500);
 
+        //Olika färger för användaren vs mottagna meddelanden
         String bgColor = isUser ? "#007AFF" : "#E5E5EA";
         String textColor = isUser ? "white" : "black";
 
@@ -76,12 +84,14 @@ public class ChatController {
                 bgColor, textColor
         ));
 
+        //Visar tid under meddelandebubblan
         LocalTime now = LocalTime.now();
         String timeText = String.format("%02d:%02d", now.getHour(), now.getMinute());
         Label timeLabel = new Label(timeText);
         timeLabel.setStyle("-fx-font-size: 10; -fx-text-fill: gray;");
         timeLabel.setPadding(new Insets(2, 0, 0, 0));
 
+        //paketerar meddelande + tid
         VBox messageBox = new VBox(bubble, timeLabel);
         messageBox.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
@@ -92,7 +102,7 @@ public class ChatController {
         chatBox.getChildren().add(container);
     }
 
-    //Används vid programmets tester
+    // Dessa metoder används vid testerna
     public void setNtfyConnection(NtfyConnectionImpl ntfy) {
         this.ntfy = ntfy;
     }
