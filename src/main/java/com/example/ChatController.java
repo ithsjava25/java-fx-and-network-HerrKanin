@@ -21,23 +21,25 @@ public class ChatController {
     //Hanterar kommunikationen mot ntfy-servern
     private NtfyConnectionImpl ntfy;
 
+    private InputField inputField;
+
+    @FXML
+    private TextField textField;
+
     @FXML
     private VBox chatBox;
 
     @FXML
-    public TextField inputField;
-
-    @FXML
     private void initialize() {
-        //När användaren trycker på Enter så skciaks medelandet
-        inputField.setOnAction((event) -> onSendClicked());
-
         ntfy = new NtfyConnectionImpl();
+        inputField = new FxInputField(textField);
+
+        textField.setOnAction(event -> onSendClicked());
 
         //Lyssnar på inkommande meddelanden från servern
-        ntfy.receive(message -> Platform.runLater(() -> {
-                model.addMessage(message);
-                addMessageBubble(message, false);
+        ntfy.receive(message -> runOnFx(() -> {
+            model.addMessage(message);
+            addMessageBubble(message, false);
         }));
     }
 
@@ -45,17 +47,21 @@ public class ChatController {
     public void onSendClicked() {
         //Hämtar text och tar bort whitespace i början & slutet
         String message = inputField.getText().trim();
-        if (!model.shouldSendMessage(message)) {
-            return;
-        }
+        if (!model.shouldSendMessage(message)) return;
+
         ntfy.send(message); //Skick text till ntfy-server
         model.addMessage(message);
-        addMessageBubble("Du: " + message, true);
-        inputField.clear(); //Töm textfältet
+
+        if (chatBox != null) {
+            runOnFx(() -> {
+                addMessageBubble("Du: " + message, true);
+                inputField.clear();
+            });
+        }
     }
 
     @FXML
-    public void onAttachedClicked(){
+    public void onAttachedClicked() {
         //Öppnar OS filväljare
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Välj en fi att skicka");
@@ -68,7 +74,7 @@ public class ChatController {
         }
     }
 
-    private void addMessageBubble (String text, boolean isUser) {
+    private void addMessageBubble(String text, boolean isUser) {
 
         Label bubble = new Label(text);
         bubble.setWrapText(true);
@@ -103,13 +109,24 @@ public class ChatController {
     }
 
     // Dessa metoder används vid testerna
+    public void setInputField(InputField field) {
+        this.inputField = field;
+    }
+
+    public void setChatBox(VBox box) {
+        this.chatBox = box;
+    }
+
     public void setNtfyConnection(NtfyConnectionImpl ntfy) {
         this.ntfy = ntfy;
     }
-    public void setInputField(TextField inputField) {
-        this.inputField = inputField;
-    }
-    public void setChatBox(VBox chatBox) {
-        this.chatBox = chatBox;
+
+    private static void runOnFx(Runnable task) {
+        try {
+            if (Platform.isFxApplicationThread()) task.run();
+            else Platform.runLater(task);
+        } catch (IllegalStateException e) {
+            task.run();
+        }
     }
 }

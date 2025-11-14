@@ -1,57 +1,57 @@
 package com.example;
 
-import javafx.application.Platform;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.util.concurrent.CountDownLatch;
 
 import static org.mockito.Mockito.*;
 
 class ChatControllerTest {
 
     private ChatController controller;
-    private NtfyConnectionImpl mockConnection;
+    private NtfyConnectionImpl mockConn;
 
-    @BeforeAll
-    static void initJFX() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        Platform.startup(latch::countDown);
+    static class FakeInputField implements InputField {
+
+        String text = "";
+
+        @Override public String getText() {
+            return text;
+        }
+
+        @Override public void clear() {
+            text = "";
+        }
     }
 
     @BeforeEach
-    void setUp() {
+    void setup() {
         controller = new ChatController();
-        mockConnection = Mockito.mock(NtfyConnectionImpl.class);
-        controller.setNtfyConnection(mockConnection);
+        mockConn = Mockito.mock(NtfyConnectionImpl.class);
 
-        controller.inputField = new TextField();
-        controller.setChatBox(new VBox());
+        controller.setNtfyConnection(mockConn);
+        controller.setChatBox(null);
     }
 
     @Test
     void shouldSendMessageWhenUserClicksSend() {
-        //Arrange
-        String message = "Hej Världen";
-        controller.setInputField(new TextField(message));
-        //Act
+        FakeInputField f = new FakeInputField();
+        f.text = "Hej Världen";
+        controller.setInputField(f);
+
         controller.onSendClicked();
-        //Assert
-        verify(mockConnection, times(1)).send(message);
+
+        verify(mockConn, times(1)).send("Hej Världen");
     }
 
     @Test
-    void shouldNotSendWhenMessageIsEmpty() {
-        //Assert
-        controller.setInputField(new TextField("   "));
-        //Act
-        controller.onSendClicked();
-        //Assert
-        verify(mockConnection, never()).send(anyString());
-    }
+    void shouldNotSendWhenEmpty() {
+        FakeInputField f = new FakeInputField();
+        f.text = "  ";
+        controller.setInputField(f);
 
+        controller.onSendClicked();
+
+        verify(mockConn, never()).send(anyString());
+    }
 }
